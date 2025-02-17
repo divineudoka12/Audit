@@ -1,24 +1,28 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { ArrowRight, Bot, User, Sparkles } from "lucide-react"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { UserButton, useUser } from "@clerk/nextjs";
+import { completeOnboarding } from "./_actions";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ArrowRight, Bot, User, Sparkles } from "lucide-react";
 
 interface Message {
-  type: "bot" | "user"
-  content: string
-  options?: string[]
+  type: "bot" | "user";
+  content: string;
+  options?: string[];
 }
 
 export default function OnboardingChat() {
-  const router = useRouter()
+  const router = useRouter();
+  const { user } = useUser();
   const [messages, setMessages] = useState<Message[]>([
     {
       type: "bot",
-      content: "Welcome to Coyamin! I'm your AI Investment & Savings Copilot. Let's set up your financial profile. What are your main financial goals?",
+      content:
+        "Welcome to Coyamin! I'm your AI Investment & Savings Copilot. Let's set up your financial profile. What are your main financial goals?",
       options: [
         "Short-term savings (1-2 years)",
         "Long-term investments (5+ years)",
@@ -27,25 +31,25 @@ export default function OnboardingChat() {
         "Wealth building",
       ],
     },
-  ])
-  const [currentStep, setCurrentStep] = useState(0)
-  const [selectedOptions, setSelectedOptions] = useState<Record<number, string[]>>({})
+  ]);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [selectedOptions, setSelectedOptions] = useState<Record<number, string[]>>({});
 
   const steps = [
     { title: "Financial Goals", progress: 33 },
     { title: "Risk Tolerance", progress: 66 },
     { title: "Investment Preferences", progress: 100 },
-  ]
+  ];
 
   const handleOptionSelect = (option: string) => {
-    setMessages((prev) => [...prev, { type: "user", content: option }])
+    setMessages((prev) => [...prev, { type: "user", content: option }]);
 
     setSelectedOptions((prev) => ({
       ...prev,
       [currentStep]: [...(prev[currentStep] || []), option],
-    }))
+    }));
 
-    setTimeout(() => {
+    setTimeout(async () => {
       if (currentStep === 0) {
         setMessages((prev) => [
           ...prev,
@@ -54,8 +58,8 @@ export default function OnboardingChat() {
             content: "Great choice! Now, what's your risk tolerance level?",
             options: ["Conservative (Low Risk)", "Moderate (Medium Risk)", "Aggressive (High Risk)"],
           },
-        ])
-        setCurrentStep(1)
+        ]);
+        setCurrentStep(1);
       } else if (currentStep === 1) {
         setMessages((prev) => [
           ...prev,
@@ -64,8 +68,8 @@ export default function OnboardingChat() {
             content: "Perfect! Finally, which investment types interest you? (You can select multiple)",
             options: ["Stocks", "ETFs", "Bonds", "Crypto", "Real Estate", "Mutual Funds"],
           },
-        ])
-        setCurrentStep(2)
+        ]);
+        setCurrentStep(2);
       } else if (currentStep === 2) {
         setMessages((prev) => [
           ...prev,
@@ -73,20 +77,36 @@ export default function OnboardingChat() {
             type: "bot",
             content: "Thanks! I'll now create your personalized investment profile based on your preferences.",
           },
-        ])
+        ]);
+
+
+        const onboardingData = Object.entries(selectedOptions).reduce((acc, [step, options]) => {
+          acc[`step_${step}`] = options;
+          return acc;
+        }, {} as Record<string, any>);
+        
+        await completeOnboarding(onboardingData);
+        await user?.reload(); // Force user data to update
+      
+        
         setTimeout(() => {
-          router.push("/dashboard") // Redirect to dashboard
-        }, 1500)
+          router.push("/dashboard");
+        }, 1500);
+        
       }
-    }, 500)
-  }
+    }, 500);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
       {/* Header */}
       <header className="bg-blue-600 text-white py-4 px-6 flex items-center justify-between shadow-md">
         <h1 className="text-lg font-semibold">Coyamin Onboarding</h1>
-        <Sparkles size={24} />
+
+        <div className="flex gap-4">
+          <Sparkles size={24} />
+          <UserButton afterSwitchSessionUrl="/" />
+        </div>
       </header>
 
       <div className="max-w-3xl mx-auto p-4">
@@ -183,5 +203,5 @@ export default function OnboardingChat() {
         </div>
       </div>
     </div>
-  )
+  );
 }
