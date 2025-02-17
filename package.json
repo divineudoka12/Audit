@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.11.2",
     "@copilotkit/react-core": "^1.5.17",
     "@copilotkit/react-textarea": "^1.5.17",
     "@copilotkit/react-ui": "^1.5.17",

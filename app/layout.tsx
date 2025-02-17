@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { CopilotKit } from "@copilotkit/react-core";
 import "@copilotkit/react-ui/styles.css";
+import { ClerkProvider } from '@clerk/nextjs'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,14 +27,17 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {copilotApiKey ? (
-          <CopilotKit publicApiKey={copilotApiKey}>{children}</CopilotKit>
-        ) : (
-          <>{children}</>
-        )}
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+          {copilotApiKey ? (
+            <CopilotKit publicApiKey={copilotApiKey}>{children}</CopilotKit>
+          ) : (
+            <>{children}</>
+          )}
+        </body>
+      </html>
+    </ClerkProvider>
+
   );
 }
